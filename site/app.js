@@ -2438,6 +2438,41 @@ function createTooltipLinkedTypeLine(prefix, label, suffix, href) {
   return segments;
 }
 
+function formatTooltipDuration(seconds) {
+  const durationMinutes = Math.round(Number(seconds || 0) / 60);
+  if (durationMinutes >= 60) {
+    return `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`;
+  }
+  return `${durationMinutes}m`;
+}
+
+function formatTooltipMetricLines(entry, units, prefix = "") {
+  const lines = [];
+  const distanceMeters = Number(entry?.distance || 0);
+  const elevationMeters = Number(entry?.elevation_gain || 0);
+  const durationSeconds = Number(entry?.moving_time || 0);
+  const distanceUnits = units?.distance === "km" ? "km" : "mi";
+  const elevationUnits = units?.elevation === "m" ? "m" : "ft";
+
+  if (distanceMeters > 0) {
+    const distance = distanceUnits === "km"
+      ? `${(distanceMeters / 1000).toFixed(2)} km`
+      : `${(distanceMeters / 1609.344).toFixed(2)} mi`;
+    lines.push(createTooltipTextLine(`${prefix}Distance: ${distance}`));
+  }
+  if (elevationMeters > 0) {
+    const elevation = elevationUnits === "m"
+      ? `${Math.round(elevationMeters)} m`
+      : `${Math.round(elevationMeters * 3.28084)} ft`;
+    lines.push(createTooltipTextLine(`${prefix}Elevation: ${elevation}`));
+  }
+  if (durationSeconds > 0) {
+    lines.push(createTooltipTextLine(`${prefix}Duration: ${formatTooltipDuration(durationSeconds)}`));
+  }
+
+  return lines;
+}
+
 function activityTypeOrderForTooltip(typeBreakdown, types) {
   const typeCounts = typeBreakdown?.typeCounts || {};
   const selectedTypes = Array.isArray(types) ? types : [];
@@ -2489,7 +2524,13 @@ function firstTooltipActivityLink(activityLinksByType, preferredType) {
   return allLinks.length === 1 ? String(allLinks[0].href || "") : "";
 }
 
-function formatTypeBreakdownLinesWithLinks(typeBreakdown, types, activityLinksByType) {
+function formatTypeBreakdownLinesWithLinks(
+  typeBreakdown,
+  types,
+  activityLinksByType,
+  typeMetricsByType = null,
+  units = { distance: "mi", elevation: "ft" },
+) {
   const lines = [];
   const orderedTypes = activityTypeOrderForTooltip(typeBreakdown, types);
   const typeCounts = typeBreakdown?.typeCounts || {};
@@ -2506,10 +2547,17 @@ function formatTypeBreakdownLinesWithLinks(typeBreakdown, types, activityLinksBy
 
     if (hasSingleLinkedType) {
       lines.push(createTooltipLinkedTypeLine("", typeLabel, `: ${count}`, links[0].href));
-      return;
+    } else {
+      lines.push(createTooltipTextLine(`${typeLabel}: ${count}`));
     }
 
-    lines.push(createTooltipTextLine(`${typeLabel}: ${count}`));
+    const typeMetrics = typeMetricsByType && typeof typeMetricsByType === "object"
+      ? typeMetricsByType[activityType]
+      : null;
+    if (typeMetrics && typeof typeMetrics === "object") {
+      lines.push(...formatTooltipMetricLines(typeMetrics, units, "- "));
+    }
+
     if (count > 1 && links.length > 1) {
       links.forEach((entry, index) => {
         const fallbackName = `${typeLabel} ${index + 1}`;
@@ -2564,6 +2612,7 @@ function buildCombinedTypeDetailsByDate(payload, types, years) {
   const detailsByDate = {};
   const typeBreakdownsByDate = {};
   const activityLinksByDateType = {};
+  const typeMetricsByDateType = {};
   const activities = getFilteredActivities(payload, types, years);
 
   activities.forEach((activity) => {
@@ -2648,7 +2697,31 @@ function buildCombinedTypeDetailsByDate(payload, types, years) {
     });
   });
 
-  return { typeLabelsByDate, typeBreakdownsByDate, activityLinksByDateType };
+  const selectedTypes = new Set(Array.isArray(types) ? types : []);
+  (Array.isArray(years) ? years : []).forEach((year) => {
+    const yearData = payload.aggregates?.[String(year)] || {};
+    Object.entries(yearData).forEach(([activityType, entries]) => {
+      if (!selectedTypes.has(activityType)) return;
+      Object.entries(entries || {}).forEach(([dateStr, dayEntry]) => {
+        if (Number(dayEntry?.count || 0) <= 0) return;
+        if (!typeMetricsByDateType[dateStr]) {
+          typeMetricsByDateType[dateStr] = {};
+        }
+        typeMetricsByDateType[dateStr][activityType] = {
+          distance: Number(dayEntry?.distance || 0),
+          moving_time: Number(dayEntry?.moving_time || 0),
+          elevation_gain: Number(dayEntry?.elevation_gain || 0),
+        };
+      });
+    });
+  });
+
+  return {
+    typeLabelsByDate,
+    typeBreakdownsByDate,
+    activityLinksByDateType,
+    typeMetricsByDateType,
+  };
 }
 
 function centerSummaryTypeCardTailRow(summaryEl) {
@@ -3062,20 +3135,18 @@ function buildHeatmapArea(aggregates, year, units, colors, type, layout, options
       cell.style.background = filled ? colors[4] : colors[0];
     }
 
-    const durationMinutes = Math.round((entry.moving_time || 0) / 60);
-    const duration = durationMinutes >= 60
-      ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
-      : `${durationMinutes}m`;
-
     const typeBreakdown = type === "all" ? options.typeBreakdownsByDate?.[dateStr] : null;
     const typeLabels = type === "all" ? options.typeLabelsByDate?.[dateStr] : null;
     const activityLinksByType = options.activityLinksByDateType?.[dateStr] || {};
+    const typeMetricsByType = options.typeMetricsByDateType?.[dateStr] || {};
     const singleTypeLabel = type === "all"
       ? getSingleActivityTooltipTypeLabel(typeBreakdown, entry, typeLabels)
       : (Number(entry.count || 0) === 1 ? displayType(type) : "");
     const singleActivityLink = Number(entry.count || 0) === 1
       ? firstTooltipActivityLink(activityLinksByType, type)
       : "";
+    const shouldShowPerTypeMetrics = type === "all" && Number(entry.count || 0) > 1;
+    let renderedTypeBreakdown = false;
     const lines = [createTooltipTextLine(dateStr)];
     if (singleTypeLabel) {
       lines.push(createTooltipLinkedTypeLine("", singleTypeLabel, "", singleActivityLink));
@@ -3083,16 +3154,17 @@ function buildHeatmapArea(aggregates, year, units, colors, type, layout, options
       lines.push(createTooltipTextLine(formatActivityCountLabel(entry.count, type === "all" ? [] : [type])));
     }
 
-    const showDistanceElevation = (entry.distance || 0) > 0 || (entry.elevation_gain || 0) > 0;
-
     if (type === "all") {
       if (!singleTypeLabel) {
         const breakdownLines = formatTypeBreakdownLinesWithLinks(
           typeBreakdown,
           options.selectedTypes || [],
           activityLinksByType,
+          shouldShowPerTypeMetrics ? typeMetricsByType : null,
+          units,
         );
         if (breakdownLines.length) {
+          renderedTypeBreakdown = true;
           lines.push(...breakdownLines);
         } else if (Array.isArray(typeLabels) && typeLabels.length) {
           lines.push(createTooltipTextLine(`Types: ${typeLabels.join(", ")}`));
@@ -3102,19 +3174,9 @@ function buildHeatmapArea(aggregates, year, units, colors, type, layout, options
       }
     }
 
-    if (showDistanceElevation) {
-      const distance = units.distance === "km"
-        ? `${(entry.distance / 1000).toFixed(2)} km`
-        : `${(entry.distance / 1609.344).toFixed(2)} mi`;
-      const elevation = units.elevation === "m"
-        ? `${Math.round(entry.elevation_gain)} m`
-        : `${Math.round(entry.elevation_gain * 3.28084)} ft`;
-      lines.push(createTooltipTextLine(`Distance: ${distance}`));
-      lines.push(createTooltipTextLine(`Elevation: ${elevation}`));
-    }
-
-    if (filled) {
-      lines.push(createTooltipTextLine(`Duration: ${duration}`));
+    const showAggregateTotals = !(shouldShowPerTypeMetrics && renderedTypeBreakdown);
+    if (showAggregateTotals) {
+      lines.push(...formatTooltipMetricLines(entry, units));
     }
     const tooltipContent = { lines };
     const canPinTooltip = Boolean(flattenTooltipActivityLinks(activityLinksByType).length);
@@ -4717,6 +4779,7 @@ async function init() {
         typeLabelsByDate,
         typeBreakdownsByDate,
         activityLinksByDateType,
+        typeMetricsByDateType,
       } = buildCombinedTypeDetailsByDate(payload, types, years);
       if (showCombinedTypes) {
         const section = document.createElement("div");
@@ -4780,6 +4843,7 @@ async function init() {
               typeBreakdownsByDate,
               typeLabelsByDate,
               activityLinksByDateType,
+              typeMetricsByDateType,
             },
           );
           setCardScrollKey(card, `${combinedSelectionKey}:year:${year}`);
