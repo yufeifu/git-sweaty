@@ -2013,5 +2013,31 @@
     "start_date_local": "2026-03-18T17:10:45Z",
     "type": "Run",
     "year": 2026
+  },
+  {
+    "date": "2026-03-19",
+    "distance": 0.0,
+    "elevation_gain": 0.0,
+    "id": "17780670553",
+    "moving_time": 8167.0,
+    "name": "Morning Weight Training",
+    "raw_activity_type": "WeightTraining",
+    "raw_type": "WeightTraining",
+    "start_date_local": "2026-03-19T06:55:53Z",
+    "type": "WeightTraining",
+    "year": 2026
+  },
+  {
+    "date": "2026-03-19",
+    "distance": 11273.9,
+    "elevation_gain": 49.0,
+    "id": "17786099227",
+    "moving_time": 3597.0,
+    "name": "fuck nina nguyen",
+    "raw_activity_type": "Run",
+    "raw_type": "Run",
+    "start_date_local": "2026-03-19T16:17:08Z",
+    "type": "Run",
+    "year": 2026
   }
 ]
