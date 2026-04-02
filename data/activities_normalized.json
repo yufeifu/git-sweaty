@@ -2234,5 +2234,44 @@
     "start_date_local": "2026-03-31T16:04:52Z",
     "type": "WeightTraining",
     "year": 2026
+  },
+  {
+    "date": "2026-04-01",
+    "distance": 0.0,
+    "elevation_gain": 0.0,
+    "id": "17945147284",
+    "moving_time": 277.0,
+    "name": "Evening Stair-Stepper",
+    "raw_activity_type": "StairStepper",
+    "raw_type": "StairStepper",
+    "start_date_local": "2026-04-01T19:14:33Z",
+    "type": "StairStepper",
+    "year": 2026
+  },
+  {
+    "date": "2026-04-01",
+    "distance": 1620.6,
+    "elevation_gain": 0.0,
+    "id": "17945213695",
+    "moving_time": 558.0,
+    "name": "Evening Run",
+    "raw_activity_type": "Run",
+    "raw_type": "Run",
+    "start_date_local": "2026-04-01T19:19:43Z",
+    "type": "Run",
+    "year": 2026
+  },
+  {
+    "date": "2026-04-02",
+    "distance": 0.0,
+    "elevation_gain": 0.0,
+    "id": "17950625722",
+    "moving_time": 2975.0,
+    "name": "Morning Weight Training",
+    "raw_activity_type": "WeightTraining",
+    "raw_type": "WeightTraining",
+    "start_date_local": "2026-04-02T06:40:26Z",
+    "type": "WeightTraining",
+    "year": 2026
   }
 ]
