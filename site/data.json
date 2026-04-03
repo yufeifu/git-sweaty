@@ -1224,6 +1224,13 @@
       "subtype": "WeightTraining",
       "type": "WeightTraining",
       "year": 2026
+    },
+    {
+      "date": "2026-04-02",
+      "hour": 16,
+      "subtype": "Run",
+      "type": "Run",
+      "year": 2026
     }
   ],
   "aggregates": {
@@ -2015,6 +2022,15 @@
           "distance": 1620.6,
           "elevation_gain": 0.0,
           "moving_time": 558.0
+        },
+        "2026-04-02": {
+          "activity_ids": [
+            "17956148055"
+          ],
+          "count": 1,
+          "distance": 4835.4,
+          "elevation_gain": 19.0,
+          "moving_time": 1468.0
         }
       },
       "StairStepper": {
@@ -2791,7 +2807,7 @@
       }
     }
   },
-  "generated_at": "2026-04-02T15:23:05.358880+00:00",
+  "generated_at": "2026-04-03T15:16:19.251374+00:00",
   "other_bucket": "OtherSports",
   "repo": "yufeifu/git-sweaty",
   "source": "strava",
