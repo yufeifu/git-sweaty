@@ -1231,6 +1231,20 @@
       "subtype": "Run",
       "type": "Run",
       "year": 2026
+    },
+    {
+      "date": "2026-04-03",
+      "hour": 17,
+      "subtype": "Run",
+      "type": "Run",
+      "year": 2026
+    },
+    {
+      "date": "2026-04-03",
+      "hour": 17,
+      "subtype": "WeightTraining",
+      "type": "WeightTraining",
+      "year": 2026
     }
   ],
   "aggregates": {
@@ -2031,6 +2045,15 @@
           "distance": 4835.4,
           "elevation_gain": 19.0,
           "moving_time": 1468.0
+        },
+        "2026-04-03": {
+          "activity_ids": [
+            "17968691180"
+          ],
+          "count": 1,
+          "distance": 3408.2,
+          "elevation_gain": 0.0,
+          "moving_time": 1202.0
         }
       },
       "StairStepper": {
@@ -2803,11 +2826,20 @@
           "distance": 0.0,
           "elevation_gain": 0.0,
           "moving_time": 2975.0
+        },
+        "2026-04-03": {
+          "activity_ids": [
+            "17968806781"
+          ],
+          "count": 1,
+          "distance": 0.0,
+          "elevation_gain": 0.0,
+          "moving_time": 959.0
         }
       }
     }
   },
-  "generated_at": "2026-04-03T15:16:19.251374+00:00",
+  "generated_at": "2026-04-04T15:08:59.311372+00:00",
   "other_bucket": "OtherSports",
   "repo": "yufeifu/git-sweaty",
   "source": "strava",
